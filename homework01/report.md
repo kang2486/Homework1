@@ -174,8 +174,7 @@ Ackermann 函數的時間與空間需求皆以「超多項式」成長。
 2. **易於理解與實現**  
    遞迴的程式碼更接近數學公式的表示方式，特別適合新手學習遞迴的基本概念。  
    以本程式為例：  
-
-   ```cpp
+  ```cpp
   //Power Set（冪集）
 #include <cstdio>
 #include <cstring>
