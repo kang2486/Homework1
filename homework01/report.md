@@ -45,6 +45,8 @@ int main() {
     cout << "Ackermann(" << m << ", " << n << ") = " << Ackermann(m, n) << endl;
     return 0;
 }
+```
+```cpp
 //非遞迴版本
 #include <iostream>
 using namespace std;
