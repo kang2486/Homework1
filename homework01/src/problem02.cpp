@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cstdlib>
 // 遞迴函數來產生所有子集
+
 void generatePowerset(char* set, int setSize, int index, char* subset, int subsetSize) {
     if (index == setSize) {
         // 印出目前子集
