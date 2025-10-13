@@ -1,28 +1,42 @@
-#include <iostream>
-#include <vector>
-#include <string>
-using namespace std;
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
-void powerSetRecursive(vector<string>& set, int index, vector<string> current) {
-    if (index == set.size()) {
-        cout << "{ ";
-        for (auto& e : current) cout << e << " ";
-        cout << "}" << endl;
+// 遞迴函數來產生所有子集
+void generatePowerset(char* set, int setSize, int index, char* subset, int subsetSize) {
+    if (index == setSize) {
+        // 印出目前子集
+        printf("{");
+        for (int i = 0; i < subsetSize; i++) {
+            printf("%c", subset[i]);
+            if (i < subsetSize - 1) {
+                printf(", ");
+            }
+        }
+        printf("}\n");
         return;
     }
 
-    // 不包含當前元素
-    powerSetRecursive(set, index + 1, current);
+    // 選擇 set[index]
+    subset[subsetSize] = set[index];
+    generatePowerset(set, setSize, index + 1, subset, subsetSize + 1);
 
-    // 包含當前元素
-    current.push_back(set[index]);
-    powerSetRecursive(set, index + 1, current);
+    // 不選擇 set[index]
+    generatePowerset(set, setSize, index + 1, subset, subsetSize);
 }
 
 int main() {
-    vector<string> S = { "a", "b", "c" };
-    cout << "Power set of {a, b, c}:\n";
-    vector<string> current;
-    powerSetRecursive(S, 0, current);
+    // 範例集合 S = {a, b, c}
+    char set[] = {'a', 'b', 'c'};
+    int setSize = sizeof(set) / sizeof(set[0]);
+
+    // 最大子集長度 = setSize，準備暫存陣列
+    char* subset = (char*)malloc(setSize * sizeof(char));
+
+    printf("Powerset of {a, b, c}:\n");
+    generatePowerset(set, setSize, 0, subset, 0);
+
+    free(subset); // 釋放記憶體
+
     return 0;
 }
