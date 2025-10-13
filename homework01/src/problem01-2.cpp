@@ -1,38 +1,53 @@
 #include <iostream>
-#include <stack>
 using namespace std;
 
-// Non-recursive Ackermann using explicit stack
-int Ackermann_nonrecursive(int m, int n) {
-    stack<int> s;
-    s.push(m);
+int A(int x, int y) {
+    int sx[10000], sy[10000]; // 模擬堆疊
+    int top = 0;
+    sx[top] = x;
+    sy[top] = y;
 
-    while (!s.empty()) {
-        m = s.top();
-        s.pop();
+    while (top >= 0) {
+        x = sx[top];
+        y = sy[top];
+        top--;
 
-        if (m == 0) {
-            n = n + 1;
-        }
-        else if (n == 0) {
-            n = 1;
-            s.push(m - 1);
-        }
+        if (x == 0) {
+            y = y + 1;
+        } 
+        else if (y == 0) {
+            top++;
+            sx[top] = x - 1;
+            sy[top] = 1;
+            continue;
+        } 
         else {
-            s.push(m - 1);
-            s.push(m);
-            n = n - 1;
+            top++;
+            sx[top] = x - 1;
+            sy[top] = -1; // 標記等內層結果
+            top++;
+            sx[top] = x;
+            sy[top] = y - 1;
+            continue;
+        }
+
+        // 模擬回傳階段
+        while (top >= 0 && sy[top] == -1) {
+            x = sx[top];
+            top--;
+            top++;
+            sx[top] = x;
+            sy[top] = y;
+            break;
         }
     }
-    return n;
+    return y;
 }
 
 int main() {
-    int m, n;
-    cout << "Enter m and n: ";
-    cin >> m >> n;
-
-    cout << "Ackermann_nonrecursive(" << m << ", " << n << ") = "
-        << Ackermann_nonrecursive(m, n) << endl;
+    int x, y;
+    cout << "Enter x and y: ";
+    cin >> x >> y;
+    cout << "Ackermann(" << x << "," << y << ") = " << A(x, y) << endl;
     return 0;
 }
