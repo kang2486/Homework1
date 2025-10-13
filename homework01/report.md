@@ -2,6 +2,7 @@
 
 作業一
 Ackermann函數和powerset 函數
+## Ackermann函數
 ## 解題說明
 本題要求實現一個阿克曼函數遞迴函式及非遞迴版本
 Ackermann函數公式A(m,n)
@@ -93,41 +94,6 @@ int main() {
     cout << "Ackermann(" << x << "," << y << ") = " << A(x, y) << endl;
     return 0;
 }
-//Power Set（冪集）
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-// 遞迴函數來產生所有子集
-void generatePowerset(char* set, int setSize, int index, char* subset, int subsetSize) {
-    if (index == setSize) {
-        // 印出目前子集
-        printf("{");
-        for (int i = 0; i < subsetSize; i++) {
-            printf("%c", subset[i]);
-            if (i < subsetSize - 1) {
-                printf(", ");
-            }
-        }
-        printf("}\n");
-        return;
-    }
-    // 選擇 set[index]
-    subset[subsetSize] = set[index];
-    generatePowerset(set, setSize, index + 1, subset, subsetSize + 1);
-    // 不選擇 set[index]
-    generatePowerset(set, setSize, index + 1, subset, subsetSize);
-}
-int main() {
-    // 範例集合 S = {a, b, c}
-    char set[] = {'a', 'b', 'c'};
-    int setSize = sizeof(set) / sizeof(set[0]);
-    // 最大子集長度 = setSize，準備暫存陣列
-    char* subset = (char*)malloc(setSize * sizeof(char));
-    printf("Powerset of {a, b, c}:\n");
-    generatePowerset(set, setSize, 0, subset, 0);
-    free(subset); // 釋放記憶體
-    return 0;
-}
 
 ```
 
@@ -167,7 +133,11 @@ $ g++ -std=c++17 -o problem01-1.cpp
 $ ./problem01-1.cpp
 6
 ```
-
+```shell
+$ g++ -std=c++17 -o problem01-2.cpp
+$ ./problem01-1.cpp
+6
+```
 ### 結論
 
 Ackermann 函數的時間與空間需求皆以「超多項式」成長。  
@@ -188,6 +158,7 @@ Ackermann 函數的時間與空間需求皆以「超多項式」成長。
 能減少系統遞迴開銷，適合在需要控制記憶體的環境中使用。
 雖然程式較複雜，但能更安全地執行較大輸入。
 非遞迴版本：取決於模擬堆疊大小，同樣呈指數增長。
+
 在本程式中，使用遞迴來計算連加總和的主要原因如下：
 
 1. **程式邏輯簡單直觀**  
@@ -205,13 +176,42 @@ Ackermann 函數的時間與空間需求皆以「超多項式」成長。
    以本程式為例：  
 
    ```cpp
-   int sigma(int n) {
-       if (n < 0)
-           throw "n < 0";
-       else if (n <= 1)
-           return n;
-       return n + sigma(n - 1);
-   }
+  //Power Set（冪集）
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+// 遞迴函數來產生所有子集
+void generatePowerset(char* set, int setSize, int index, char* subset, int subsetSize) {
+    if (index == setSize) {
+        // 印出目前子集
+        printf("{");
+        for (int i = 0; i < subsetSize; i++) {
+            printf("%c", subset[i]);
+            if (i < subsetSize - 1) {
+                printf(", ");
+            }
+        }
+        printf("}\n");
+        return;
+    }
+    // 選擇 set[index]
+    subset[subsetSize] = set[index];
+    generatePowerset(set, setSize, index + 1, subset, subsetSize + 1);
+    // 不選擇 set[index]
+    generatePowerset(set, setSize, index + 1, subset, subsetSize);
+}
+int main() {
+    // 範例集合 S = {a, b, c}
+    char set[] = {'a', 'b', 'c'};
+    int setSize = sizeof(set) / sizeof(set[0]);
+    // 最大子集長度 = setSize，準備暫存陣列
+    char* subset = (char*)malloc(setSize * sizeof(char));
+    printf("Powerset of {a, b, c}:\n");
+    generatePowerset(set, setSize, 0, subset, 0);
+    free(subset); // 釋放記憶體
+    return 0;
+}
+
    ```
 
 3. **遞迴的語意清楚**  
