@@ -137,7 +137,7 @@ $ ./problem01-1.cpp
 ```
 ```shell
 $ g++ -std=c++17 -o problem01-2.cpp
-$ ./problem01-1.cpp
+$ ./problem01-2.cpp
 6
 ```
 ### 結論
