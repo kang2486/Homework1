@@ -1,5 +1,6 @@
 #include <iostream>
 using namespace std;
+
 int A(int x, int y) {
     int sx[10000], sy[10000]; // 模擬堆疊
     int top = 0;
