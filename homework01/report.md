@@ -93,6 +93,8 @@ int main() {
     cout << "Ackermann(" << x << "," << y << ") = " << A(x, y) << endl;
     return 0;
 }
+//Power Set（冪集）
+
 ```
 
 ## 效能分析
