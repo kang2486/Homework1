@@ -114,8 +114,8 @@ int main() {
 ### 編譯與執行指令
 
 ```shell
-$ g++ -std=c++17 -o sigma sigma.cpp
-$ ./sigma
+$ g++ -std=c++17 -o problem01-1.cpp
+$ ./problem01-1.cpp
 6
 ```
 
