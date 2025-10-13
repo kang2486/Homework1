@@ -1,17 +1,14 @@
 #include <iostream>
 using namespace std;
-
 int A(int x, int y) {
     int sx[10000], sy[10000]; // 模擬堆疊
     int top = 0;
     sx[top] = x;
     sy[top] = y;
-
     while (top >= 0) {
         x = sx[top];
         y = sy[top];
         top--;
-
         if (x == 0) {
             y = y + 1;
         } 
@@ -30,7 +27,6 @@ int A(int x, int y) {
             sy[top] = y - 1;
             continue;
         }
-
         // 模擬回傳階段
         while (top >= 0 && sy[top] == -1) {
             x = sx[top];
@@ -43,7 +39,6 @@ int A(int x, int y) {
     }
     return y;
 }
-
 int main() {
     int x, y;
     cout << "Enter x and y: ";
