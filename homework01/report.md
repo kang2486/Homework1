@@ -25,9 +25,9 @@ Ackermann函數公式A(m,n)
 以下為主要程式碼：
 
 ```cpp
+//遞迴版本
 #include <iostream>
 using namespace std;
-//遞迴版本
 // Ackermann function (recursive)
 int Ackermann(int m, int n) {
     if (m == 0)
