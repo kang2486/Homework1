@@ -195,24 +195,34 @@ int main() {
 - 第二個多項式有 `n` 項  
 
 在 `Add()` 函式中，會以兩個索引（`aPos`, `bPos`）從頭到尾依次比對：
--Polynomial::Polynomial()（建構子）
--- O(1) — 只分配初始陣列（capacity = 2），常數工作。
+
+Polynomial::Polynomial()（建構子）
+O(1) — 只分配初始陣列（capacity = 2），常數工作。
+
 Polynomial::~Polynomial()（解構子）
 O(1)（實際上是釋放陣列，視實作為常數時間）。
+
 拷貝建構子 Polynomial::Polynomial(const Polynomial& other)
 O(k) 時間，其中 k = other.terms（需分配新陣列並複製 k 個 Term）。
+
 指定運算子 operator=(const Polynomial& other)
 O(k) 時間（同樣需要刪除舊陣列、分配新陣列並複製 k 個項目）。若 this == &other 則為 O(1)。
+
 Polynomial::newTerm(const float, const int)（加入一項）
 均攤（amortized）O(1) 時間：大多數呼叫是常數時間，但當 terms == capacity 時會做 resize（分配新的陣列、複製現有項目），那次呼叫為 O(t)（t = 當時的 terms），但採倍增策略時，整體插入序列的均攤成本仍為 O(1)／插入。
+
 輸入運算子 operator>>(istream&, Polynomial&)（讀入 n 項）
 O(k) 時間，其中 k = 輸入的項數（呼叫 k 次 newTerm，均攤 O(1) 每次）。
+
 輸出運算子 operator<<(ostream&, const Polynomial&)
 O(k) 時間，其中 k = poly.terms（輸出每個項一次）。
+
 加法 Polynomial::Add(const Polynomial& b) const
 O(n + m) 時間：這是像 merge 的單趟掃描，最多走過 A 與 B 各一遍，對於每對指標比較與 c.newTerm 的呼叫總數上限為 n + m。
+
 main()（整體流程：讀 A、讀 B、C = A.Add(B)、輸出 C）
 O(n + m) 時間（由輸入、加法與輸出組合而成；各為線性）。 
+
 - 直到所有項目處理完畢 → **O(m + n)**  
 
 因此：
