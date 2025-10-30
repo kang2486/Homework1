@@ -195,8 +195,8 @@ int main() {
 - 第二個多項式有 `n` 項  
 
 在 `Add()` 函式中，會以兩個索引（`aPos`, `bPos`）從頭到尾依次比對：
-Polynomial::Polynomial()（建構子）
-- O(1) — 只分配初始陣列（capacity = 2），常數工作。
+-Polynomial::Polynomial()（建構子）
+-- O(1) — 只分配初始陣列（capacity = 2），常數工作。
 Polynomial::~Polynomial()（解構子）
 O(1)（實際上是釋放陣列，視實作為常數時間）。
 拷貝建構子 Polynomial::Polynomial(const Polynomial& other)
