@@ -197,7 +197,7 @@ int main() {
 在 `Add()` 函式中，會以兩個索引（`aPos`, `bPos`）從頭到尾依次比對：
 
 - Polynomial::Polynomial()（建構子）
-O(1) — 只分配初始陣列（capacity = 2），常數工作。
+O(1) 只分配初始陣列（capacity = 2），常數工作。
 
 - Polynomial::~Polynomial()（解構子）
 O(1)（實際上是釋放陣列，視實作為常數時間）。
@@ -207,9 +207,9 @@ O(k) 時間，其中 k = other.terms（需分配新陣列並複製 k 個 Term）
 
 - 指定運算子 operator=(const Polynomial& other)
 O(k) 時間（同樣需要刪除舊陣列、分配新陣列並複製 k 個項目）。若 this == &other 則為 O(1)。
-
 Polynomial::newTerm(const float, const int)（加入一項）
-- 均攤（amortized）O(1) 時間：大多數呼叫是常數時間，但當 terms == capacity 時會做 resize（分配新的陣列、複製現有項目），那次呼叫為 O(t)（t = 當時的 terms），但採倍增策略時，整體插入序列的均攤成本仍為 O(1)／插入。
+
+- 均攤（amortized）O(1) 時間：大多數呼叫是常數時間，但當 terms == capacity 時會做 resize（分配新的陣列、複製現有項目），那次呼叫為 O(t)（t = 當時的 terms），但採倍增策略時，整體插入序列的均攤成本仍為 O(1)插入。
 
 - 輸入運算子 operator>>(istream&, Polynomial&)（讀入 n 項）
 O(k) 時間，其中 k = 輸入的項數（呼叫 k 次 newTerm，均攤 O(1) 每次）。
@@ -232,10 +232,25 @@ O(n + m) 時間（由輸入、加法與輸出組合而成；各為線性）。
 
 ### 空間複雜度（Space Complexity）
 
-程式中使用了動態陣列 `termArray`，  
-每個多項式各自擁有自己的記憶體區塊。  
+每個 *Polynomial* 物件本身：
 
-在加法過程中會新建一個結果多項式，其項數上限為 `m + n`。  
+使用 O(k) 額外空間來儲存 termArray，k = 該多項式的項數或其 capacity（實際儲存需 O(terms)，但陣列容量可能大於 terms，仍視為 O(terms) 級別）。
+
+拷貝建構子 / 指定運算子：
+
+臨時需要 O(k)（新陣列），如果同時存在被指派與原物件，總體峰值可能一度存在兩份陣列（舊 + 新），因此峰值空間約 O(k)。
+
+Add 的返回值 c：
+
+需要 O(n + m) 額外空間（結果最多包含 n + m 項），因此 Add 的額外空間複雜度為 O(n + m)。
+
+newTerm resize 的暫時成本：
+
+當發生 resize 時會分配新的陣列並複製舊陣列，這個操作會短暫使用 O(t) 的額外空間（t = 當時的 terms），但屬暫時峰值；整體仍為線性級別。
+
+main() 的峰值記憶體（讀入 A, B, 並產生 C）：
+
+峰值大約 O(n + m +（可能的）capacity slack)，實務上 O(n + m)。
 因此：
 > **空間複雜度：** `S(n, m) = O(m + n)`
 
