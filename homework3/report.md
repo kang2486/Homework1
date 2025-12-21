@@ -45,6 +45,13 @@ ChainNode、Chain、ChainIterator、Polynomial、AvailableList
 
 如果次方最小就插在串列(list)的尾
 
+
+### 多項式加法與減法（operator+, operator-）
+
+建立新的多項式結果物件，依序走訪兩個多項式的鏈結串列，將每一項透過 newTerm 插入結果中
+
+優點:不需直接處理指標或排序，所有結構正確性由 newTerm 統一保證，程式邏輯簡潔、可維護性高
+
 ## 程式實作
 
 
