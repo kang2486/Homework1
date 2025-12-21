@@ -283,23 +283,26 @@ int main() {
 
 ## 效能分析
 
-加法 / 減法
+## 效能分析總覽（Time & Space Complexity）
 
-時間複雜度: $O(n + m)$
+### 符號說明（Notation）
 
-空間複雜度: $O(n + m)$
+- n：第一個多項式中的項數  
+- m：第二個多項式中的項數  
+- k：輸入時讀入的項數
 
-乘法
+| 功能 / Function | 時間複雜度 (Time Complexity) | 空間複雜度 (Space Complexity) |
+|-----------------|-------------------------------|--------------------------------|
+| `newTerm` | O(n) | O(1) |
+| 多項式加法 `operator+` | O((n + m)²) | O(n + m) |
+| 多項式減法 `operator-` | O((n + m)²) | O(n + m) |
+| 多項式乘法 `operator*` | O(n²m²) | O(nm) |
+| 多項式計算 `Evaluate` | O(n) | O(1) |
+| 輸入運算子 `operator>>` | O(k²) | O(k) |
+| 輸出運算子 `operator<<` | O(n) | O(1) |
 
-時間複雜度: $O(n \times m)$
+ 
 
-空間複雜度: $O(n \times m)$
-
-Available List
-
-時間複雜度: $O(1)$
-
-空間複雜度: $O(1)$
 ## 測試與驗證
 
 ### 測試案例
