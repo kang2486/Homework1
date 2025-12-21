@@ -11,7 +11,7 @@
 
 多項式在指定變數值下的計算（Evaluate）
 
-由於題目限用標頭檔，故不能使用#include<vector>,#include<list>等STL容器，故題目的用意在於:必須自行實作 鏈結串列（Linked List） 與 迭代器(Iterator)
+由於題目限用標頭檔，故不能使用vector,list等STL容器，故題目的用意在於:必須自行實作 鏈結串列（Linked List） 與 迭代器(Iterator)
 
 作業需實作下列類別：
 ChainNode、Chain、ChainIterator、AvailableList、Polynomial
