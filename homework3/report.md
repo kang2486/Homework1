@@ -19,9 +19,9 @@ ChainNode、Chain、ChainIterator、Polynomial、AvailableList
 
 ### 解題策略
 
-使用 ChainNode 作為基本節點單位，並以 Chain 組成單向鏈結串列來儲存多項式的每一項(Term)。
-透過 ChainIterator 進行串列走訪，使多項式運算可使用 iterator 方式撰寫，提升程式可讀性。
-為了減少動態記憶體配置的成本，額外實作 Available List，用來回收不再使用的節點，並於需要時重新取用，符合資料結構課程中對記憶體管理的設計理念。
+核心策略:在資料插入階段即維持正確的多項式結構，而非事後修正。
+
+新增多項式項目（newTerm）
 
 ## 程式實作
 
