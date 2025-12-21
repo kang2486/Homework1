@@ -52,6 +52,13 @@ ChainNode、Chain、ChainIterator、Polynomial、AvailableList
 
 優點:不需直接處理指標或排序，所有結構正確性由 newTerm 統一保證，程式邏輯簡潔、可維護性高
 
+### 多項式乘法（operator*）
+
+使用雙層迴圈，任意兩項相乘後：係數相乘，次方相加，將結果項目插入新多項式
+
+原理是:多項式在做乘法滿足係數相乘，指數相加的規律ex:2x^3*5x^4=10x^7
+
+
 ## 程式實作
 
 
