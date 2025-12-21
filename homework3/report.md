@@ -500,5 +500,213 @@ A(2) = 33
 
 透過將 Available List 結合至多項式微分與積分運算，不僅能擴充原有功能，也能讓節點回收機制真正發揮效用。此延伸發想展示了對資料結構設計層面的理解，從「功能正確」進一步提升至「資源管理與效能考量」，使整體程式更具完整性與實務價值。
 
+### 程式實作(依上述主程式擴充增加Available List)
 
+```cpp
 
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+/* ===============================
+   Linked List 基本架構
+   =============================== */
+
+template <class T> class Chain;
+template <class T> class ChainIterator;
+
+template <class T>
+class ChainNode {
+    friend class Chain<T>;
+    friend class ChainIterator<T>;
+private:
+    T element;                // 節點儲存的資料
+    ChainNode<T>* next;       // 指向下一個節點
+public:
+    ChainNode(const T& e, ChainNode<T>* n = nullptr)
+        : element(e), next(n) {}
+};
+
+template <class T>
+class ChainIterator {
+private:
+    ChainNode<T>* current;    // 目前指向的節點
+public:
+    ChainIterator(ChainNode<T>* p = nullptr) : current(p) {}
+
+    T& operator*() const { return current->element; }
+    T* operator->() const { return &current->element; }
+
+    ChainIterator& operator++() {
+        current = current->next;
+        return *this;
+    }
+
+    bool operator!=(const ChainIterator& rhs) const {
+        return current != rhs.current;
+    }
+};
+
+template <class T>
+class Chain {
+private:
+    ChainNode<T>* head;       // 串列起點
+public:
+    Chain() : head(nullptr) {}
+
+    ~Chain() {
+        while (head) {
+            ChainNode<T>* tmp = head;
+            head = head->next;
+            delete tmp;
+        }
+    }
+
+    ChainIterator<T> begin() const { return ChainIterator<T>(head); }
+    ChainIterator<T> end() const { return ChainIterator<T>(nullptr); }
+
+    void insertFront(const T& e) {
+        head = new ChainNode<T>(e, head);
+    }
+};
+
+/* ===============================
+   Polynomial 結構
+   =============================== */
+
+struct Term {
+    double coef;  // 係數
+    int exp;      // 次方
+    Term(double c = 0, int e = 0) : coef(c), exp(e) {}
+};
+
+class Polynomial {
+    friend istream& operator>>(istream&, Polynomial&);
+    friend ostream& operator<<(ostream&, const Polynomial&);
+private:
+    Chain<Term> terms;
+
+public:
+    /* 新增一項（合併相同次方） */
+    void newTerm(double c, int e) {
+        if (c == 0) return;
+
+        for (auto it = terms.begin(); it != terms.end(); ++it) {
+            if (it->exp == e) {
+                it->coef += c;
+                return;
+            }
+        }
+        terms.insertFront(Term(c, e));
+    }
+
+    /* 多項式加法 */
+    Polynomial operator+(const Polynomial& b) const {
+        Polynomial r;
+        for (auto it = terms.begin(); it != terms.end(); ++it)
+            r.newTerm(it->coef, it->exp);
+        for (auto it = b.terms.begin(); it != b.terms.end(); ++it)
+            r.newTerm(it->coef, it->exp);
+        return r;
+    }
+
+    /* 多項式減法 */
+    Polynomial operator-(const Polynomial& b) const {
+        Polynomial r;
+        for (auto it = terms.begin(); it != terms.end(); ++it)
+            r.newTerm(it->coef, it->exp);
+        for (auto it = b.terms.begin(); it != b.terms.end(); ++it)
+            r.newTerm(-it->coef, it->exp);
+        return r;
+    }
+
+    /* 多項式乘法 */
+    Polynomial operator*(const Polynomial& b) const {
+        Polynomial r;
+        for (auto it1 = terms.begin(); it1 != terms.end(); ++it1)
+            for (auto it2 = b.terms.begin(); it2 != b.terms.end(); ++it2)
+                r.newTerm(it1->coef * it2->coef,
+                          it1->exp + it2->exp);
+        return r;
+    }
+
+    /* 代入計算 */
+    double Evaluate(double x) const {
+        double sum = 0;
+        for (auto it = terms.begin(); it != terms.end(); ++it)
+            sum += it->coef * pow(x, it->exp);
+        return sum;
+    }
+
+    /* ===== 新增功能 ===== */
+
+    /* A 微分 */
+    Polynomial Differentiate() const {
+        Polynomial r;
+        for (auto it = terms.begin(); it != terms.end(); ++it) {
+            if (it->exp > 0)
+                r.newTerm(it->coef * it->exp, it->exp - 1);
+        }
+        return r;
+    }
+
+    /* B 積分（不含積分常數 C） */
+    Polynomial Integrate() const {
+        Polynomial r;
+        for (auto it = terms.begin(); it != terms.end(); ++it) {
+            r.newTerm(it->coef / (it->exp + 1), it->exp + 1);
+        }
+        return r;
+    }
+};
+
+/* ===============================
+   I/O Operator
+   =============================== */
+
+istream& operator>>(istream& is, Polynomial& p) {
+    int n;
+    is >> n;
+    for (int i = 0; i < n; i++) {
+        double c;
+        int e;
+        is >> c >> e;
+        p.newTerm(c, e);
+    }
+    return is;
+}
+
+ostream& operator<<(ostream& os, const Polynomial& p) {
+    bool first = true;
+    for (auto it = p.terms.begin(); it != p.terms.end(); ++it) {
+        if (!first && it->coef > 0) os << "+";
+        os << it->coef << "x^" << it->exp;
+        first = false;
+    }
+    return os;
+}
+
+/* ===============================
+   主程式測試
+   =============================== */
+
+int main() {
+    Polynomial A, B;
+
+    cout << "Input Polynomial A:\n";
+    cin >> A;
+    cout << "Input Polynomial B:\n";
+    cin >> B;
+
+    cout << "\nA + B = " << A + B << endl;
+    cout << "A - B = " << A - B << endl;
+    cout << "A * B = " << A * B << endl;
+    cout << "A(2)  = " << A.Evaluate(2) << endl;
+
+    cout << "\nA' (Differentiate A) = " << A.Differentiate() << endl;
+    cout << "∫B dx (Integrate B) = " << B.Integrate() << " + C" << endl;
+
+    return 0;
+}
+
+```
