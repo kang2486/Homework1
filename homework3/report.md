@@ -58,6 +58,9 @@ ChainNode、Chain、ChainIterator、Polynomial、AvailableList
 
 原理是:多項式在做乘法滿足係數相乘，指數相加的規律ex:2x^3*5x^4=10x^7
 
+### 多項式計算（Evaluate）
+
+逐項走訪鏈結串列，使用 pow(x, exp) 計算每一項累加結果
 
 ## 程式實作
 
