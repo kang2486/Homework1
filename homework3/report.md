@@ -21,7 +21,7 @@ ChainNode、Chain、ChainIterator、Polynomial、AvailableList
 
 核心策略:在資料插入階段即維持正確的多項式結構，而非事後修正。
 
-新增多項式項目（newTerm）
+### 新增多項式項目（newTerm）
 
 ## 程式實作
 
