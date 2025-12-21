@@ -326,26 +326,24 @@ g++ homework3.cpp -std=c++17 -o homework3
 
 
 
-### 編譯與執行指令
-
-```shell
-$ g++ homework3.cpp -std=c++17 -o homework3
-$ ./homework3
-
 A:
 3
-3 2
-2 1
-1 0
+4 3
+-2 1
+5 0
 B:
-2
+3
+3 2
 1 1
-1 0
+-1 0
 
-A+B = 3x^2+3x^1+2x^0
-A-B = 3x^2+1x^1
-A*B = 3x^3+5x^2+3x^1+1x^0
-A(2) = 17
+
+
+A+B = 4x^3+3x^2-1x^1+4x^0
+A-B = 4x^3-3x^2-3x^1+6x^0
+A*B = 4x^5-5x^4-11x^3+17x^2-7x^1-5x^0
+A(2) = 33
+
 
 ```
 
