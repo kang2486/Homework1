@@ -110,32 +110,21 @@ public:
 ```
 ### main()
 ```cpp
+// ================= 測試 =================
 int main() {
-    int n;
-    cout << "輸入測資數量: ";
-    cin >> n;
+    MinHeap<int> h;
 
-    Heap<int> h1(true);
-    cout << "輸入 MinHeap:\n";
-    h1.build(n);
+    // 插入測試資料
+    h.push(10);
+    h.push(5);
+    h.push(20);
+    h.push(3);
 
-    cout << "\nMinHeap:\n";
-    h1.printLevels();
-    cout << "最小值: " << h1.top() << endl;
-    h1.pop();
-    cout << "刪除後:\n";
-    h1.printLevels();
-
-    Heap<int> h2(false);
-    cout << "\n輸入 MaxHeap:\n";
-    h2.build(n);
-
-    cout << "\nMaxHeap:\n";
-    h2.printLevels();
-    cout << "最大值: " << h2.top() << endl;
-    h2.pop();
-    cout << "刪除後:\n";
-    h2.printLevels();
+    // 依序輸出最小值
+    while (!h.isEmpty()) {
+        cout << h.top() << " ";
+        h.pop();
+    }
 
     return 0;
 }
