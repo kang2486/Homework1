@@ -2,10 +2,10 @@
 作業四
 
 ## 解題說明
-###  Min / Max Heap
-定義 MinPQ 抽象類別（包含 insert、extractMin 等操作），  
-後再 MinHeap 繼承並用 Binary Heap，各操作時間複雜度與 MaxHeap 對應相同。  
-再設計 MaxHeap 並與 MinHeap 做對照，觀察兩者在操作上的時間複雜度是否一樣。
+### MinHeap 與抽象類別實作
+- 本題要求定義一個名為 MinPQ 的抽象基底類別（Abstract Class），作為最小優先權佇列的介面。
+- 實作 MinHeap 類別繼承該介面，利用**完全二元樹（Complete Binary Tree）**的性質來維護堆積。
+- 目標：確保 push 與 pop 的時間複雜度皆為 $O(\log n)$，且 top 為 $O(1)$。關鍵性質：父節點的值必須小於或等於其子節點的值。
 
 ## 解題策略
 - 用 vector 存完全二元樹
