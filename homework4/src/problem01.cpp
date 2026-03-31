@@ -2,67 +2,72 @@
 #include <iostream>
 using namespace std;
 
-// 自訂 Heap（可支援 MinHeap / MaxHeap）
+// ================= 抽象類別（Min Priority Queue） =================
 template <class T>
-class MyHeap {
+class MinPQ {
+public:
+    virtual ~MinPQ() {}  // 虛擬解構子
+
+    // 判斷是否為空
+    virtual bool isEmpty() const = 0;
+
+    // 取得最小元素（但不刪除）
+    virtual const T& top() const = 0;
+
+    // 插入元素
+    virtual void push(const T& x) = 0;
+
+    // 刪除最小元素
+    virtual void pop() = 0;
+};
+
+// ================= MinHeap（繼承 MinPQ） =================
+template <class T>
+class MinHeap : public MinPQ<T> {
 private:
-    T data[10000];   // 用陣列儲存 Heap
-    int count;       // 目前元素數量
-    bool minMode;    // true = MinHeap, false = MaxHeap
+    T arr[10000];  // 儲存 Heap 的陣列
+    int size;      // 目前元素數量
 
-    // 比較優先順序（依照 Heap 類型）
-    bool priority(const T& a, const T& b) {
-        if (minMode == true) {
-            return a < b;   // MinHeap：小的優先
-        } else {
-            return a > b;   // MaxHeap：大的優先
-        }
-    }
-
-    // 向上調整（維持 Heap 性質）
-    void adjustUp(int index) {
-        // 當還沒到根節點
+    // 向上調整（維持 MinHeap 性質）
+    void heapifyUp(int index) {
         while (index > 0) {
-            int parentIndex = (index - 1) / 2;
+            int parent = (index - 1) / 2;
 
-            // 如果目前節點優先權比較高，就往上交換
-            if (priority(data[index], data[parentIndex])) {
-                T temp = data[index];
-                data[index] = data[parentIndex];
-                data[parentIndex] = temp;
+            // 若子節點比父節點小，則交換
+            if (arr[index] < arr[parent]) {
+                T temp = arr[index];
+                arr[index] = arr[parent];
+                arr[parent] = temp;
 
-                index = parentIndex; // 繼續往上檢查
+                index = parent; // 繼續往上
             } else {
                 break;
             }
         }
     }
 
-    // 向下調整（維持 Heap 性質）
-    void adjustDown(int index) {
+    // 向下調整（維持 MinHeap 性質）
+    void heapifyDown(int index) {
         while (true) {
-            int leftChild = index * 2 + 1;
-            int rightChild = index * 2 + 2;
+            int left = index * 2 + 1;
+            int right = index * 2 + 2;
 
-            // 沒有子節點就停止
-            if (leftChild >= count) break;
+            if (left >= size) break; // 沒有子節點
 
-            int target = leftChild;
+            int smallest = left;
 
-            // 若右子節點存在，比較左右哪個優先
-            if (rightChild < count) {
-                if (priority(data[rightChild], data[leftChild])) {
-                    target = rightChild;
-                }
+            // 比較左右子節點，找較小者
+            if (right < size && arr[right] < arr[left]) {
+                smallest = right;
             }
 
-            // 如果子節點比目前節點更優先，則交換
-            if (priority(data[target], data[index])) {
-                T temp = data[index];
-                data[index] = data[target];
-                data[target] = temp;
+            // 若子節點較小則交換
+            if (arr[smallest] < arr[index]) {
+                T temp = arr[index];
+                arr[index] = arr[smallest];
+                arr[smallest] = temp;
 
-                index = target; // 繼續往下調整
+                index = smallest; // 繼續往下
             } else {
                 break;
             }
@@ -70,117 +75,55 @@ private:
     }
 
 public:
-    // 建構子（指定 Heap 類型）
-    MyHeap(bool isMinHeap) {
-        minMode = isMinHeap;
-        count = 0;
+    MinHeap() {
+        size = 0;
     }
 
-    // 判斷是否為空
-    bool isEmpty() {
-        return (count == 0);
+    // 是否為空
+    bool isEmpty() const override {
+        return size == 0;
     }
 
-    // 取得頂端元素（最小或最大）
-    T getTop() {
-        if (isEmpty()) {
-            cout << "Heap empty\n";
-            return T();
-        }
-        return data[0];
+    // 取得最小值
+    const T& top() const override {
+        return arr[0];
     }
 
-    // 插入新元素
-    void insert(T value) {
-        data[count] = value;
-        count++;
-
-        // 插入後需向上調整
-        adjustUp(count - 1);
+    // 插入元素
+    void push(const T& x) override {
+        arr[size] = x;   // 放到最後
+        size++;
+        heapifyUp(size - 1); // 向上調整
     }
 
-    // 移除頂端元素
-    void removeTop() {
-        if (isEmpty()) {
-            cout << "Heap empty\n";
-            return;
-        }
+    // 刪除最小值
+    void pop() override {
+        if (size == 0) return;
 
-        // 將最後一個元素移到根
-        data[0] = data[count - 1];
-        count--;
+        arr[0] = arr[size - 1]; // 用最後一個補上
+        size--;
 
-        // 再向下調整
-        if (count > 0) {
-            adjustDown(0);
-        }
-    }
-
-    // 建立 Heap（從輸入讀資料）
-    void inputData(int n) {
-        for (int i = 0; i < n; i++) {
-            T value;
-            cin >> value;
-            insert(value);
-        }
-    }
-
-    // 以「層級」方式印出 Heap
-    void showTree() {
-        int index = 0;
-        int level = 0;
-
-        while (index < count) {
-            // 計算該層應有節點數 (2^level)
-            int nodes = 1;
-            for (int i = 0; i < level; i++) {
-                nodes *= 2;
-            }
-
-            cout << "Level " << level << ": ";
-
-            // 輸出該層節點
-            for (int j = 0; j < nodes && index < count; j++) {
-                cout << data[index] << " ";
-                index++;
-            }
-
-            cout << endl;
-            level++;
+        if (size > 0) {
+            heapifyDown(0); // 向下調整
         }
     }
 };
 
+// ================= 測試 =================
 int main() {
-    int n;
-    cout << "請輸入數量: ";
-    cin >> n;
+    MinHeap<int> h;
 
-    // 建立 MinHeap
-    MyHeap<int> minHeap(true);
-    cout << "輸入 MinHeap:\n";
-    minHeap.inputData(n);
+    // 插入測試資料
+    h.push(10);
+    h.push(5);
+    h.push(20);
+    h.push(3);
 
-    cout << "\nMinHeap 結構:\n";
-    minHeap.showTree();
-    cout << "最小值: " << minHeap.getTop() << endl;
-
-    minHeap.removeTop();
-    cout << "刪除後:\n";
-    minHeap.showTree();
-
-    // 建立 MaxHeap
-    MyHeap<int> maxHeap(false);
-    cout << "\n輸入 MaxHeap:\n";
-    maxHeap.inputData(n);
-
-    cout << "\nMaxHeap 結構:\n";
-    maxHeap.showTree();
-    cout << "最大值: " << maxHeap.getTop() << endl;
-
-    maxHeap.removeTop();
-    cout << "刪除後:\n";
-    maxHeap.showTree();
+    // 依序輸出最小值
+    while (!h.isEmpty()) {
+        cout << h.top() << " ";
+        h.pop();
+    }
 
     return 0;
 }
