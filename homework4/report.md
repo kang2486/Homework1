@@ -301,30 +301,55 @@ int getHeight(Node* root) {
 ### 刪除節點 (b) 
 ```cpp
 // 找右子樹最小值
+// ================= 找最小節點 =================
 Node* findMin(Node* root) {
-    while (root->left)
+    while (root->left != NULL) {
         root = root->left;
-    return root;
-}
-
-// 刪除指定 key
-Node* deleteNode(Node* root, int key) {
-    if (!root) return NULL;
-
-    if (key < root->val)
-        root->left = deleteNode(root->left, key);
-    else if (key > root->val)
-        root->right = deleteNode(root->right, key);
-    else {
-        if (!root->left) return root->right;
-        if (!root->right) return root->left;
-
-        Node* temp = findMin(root->right);
-        root->val = temp->val;
-        root->right = deleteNode(root->right, temp->val);
     }
     return root;
 }
+
+// ================= 刪除節點 =================
+// Time Complexity:
+// Average: O(log n)
+// Worst: O(n)
+Node* deleteNode(Node* root, int key) {
+    if (root == NULL) return NULL;
+
+    if (key < root->value) {
+        root->left = deleteNode(root->left, key);
+    }
+    else if (key > root->value) {
+        root->right = deleteNode(root->right, key);
+    }
+    else {
+        // 找到要刪除的節點
+
+        // case 1: 沒左子樹
+        if (root->left == NULL) {
+            Node* temp = root->right;
+            delete root; // 釋放記憶體
+            return temp;
+        }
+
+        // case 2: 沒右子樹
+        if (root->right == NULL) {
+            Node* temp = root->left;
+            delete root;
+            return temp;
+        }
+
+        // case 3: 有兩個子樹
+        Node* temp = findMin(root->right);
+
+        root->value = temp->value;
+
+        root->right = deleteNode(root->right, temp->value);
+    }
+
+    return root;
+}
+
 ```
 ### main() 
 ```cpp
