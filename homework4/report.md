@@ -287,6 +287,7 @@ Node* insertNode(Node* root, int v) {
 ```
 ### 計算高度
 ```cpp
+// ================= 計算高度 =================
 int getHeight(Node* root) {
     if (root == NULL) return 0;
 
