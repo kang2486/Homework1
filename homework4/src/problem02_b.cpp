@@ -1,158 +1,109 @@
 //41343122
 #include <iostream>
-#include <cmath>
-#include <random>
 using namespace std;
 
-// 二元搜尋樹節點
-class BSTNode {
+// ================= BST 節點 =================
+class Node {
 public:
-    int data;
-    BSTNode* leftPtr;
-    BSTNode* rightPtr;
+    int value;
+    Node* left;
+    Node* right;
 
-    BSTNode(int v) {
-        data = v;
-        leftPtr = NULL;
-        rightPtr = NULL;
+    Node(int v) {
+        value = v;
+        left = NULL;
+        right = NULL;
     }
 };
 
-// 插入節點（改成 while 寫法）
-BSTNode* insertValue(BSTNode* root, int v) {
-    if (root == NULL) {
-        return new BSTNode(v);
-    }
+// ================= 插入 =================
+Node* insertNode(Node* root, int v) {
+    if (root == NULL) return new Node(v);
 
-    BSTNode* cur = root;
-
-    while (true) {
-        if (v < cur->data) {
-            if (cur->leftPtr == NULL) {
-                cur->leftPtr = new BSTNode(v);
-                break;
-            } else {
-                cur = cur->leftPtr;
-            }
-        } else {
-            if (cur->rightPtr == NULL) {
-                cur->rightPtr = new BSTNode(v);
-                break;
-            } else {
-                cur = cur->rightPtr;
-            }
-        }
-    }
+    if (v < root->value)
+        root->left = insertNode(root->left, v);
+    else
+        root->right = insertNode(root->right, v);
 
     return root;
 }
 
-// 計算樹高
-int calcHeight(BSTNode* node) {
-    if (node == NULL) {
-        return 0;
+// ================= 找最小節點 =================
+Node* findMin(Node* root) {
+    while (root->left != NULL) {
+        root = root->left;
     }
-
-    int leftH = calcHeight(node->leftPtr);
-    int rightH = calcHeight(node->rightPtr);
-
-    if (leftH > rightH) {
-        return leftH + 1;
-    } else {
-        return rightH + 1;
-    }
+    return root;
 }
 
-// 找右子樹中的最小節點（用於刪除）
-BSTNode* getMinNode(BSTNode* node) {
-    BSTNode* temp = node;
+// ================= 刪除節點 =================
+// Time Complexity:
+// Average: O(log n)
+// Worst: O(n)
+Node* deleteNode(Node* root, int key) {
+    if (root == NULL) return NULL;
 
-    while (temp != NULL && temp->leftPtr != NULL) {
-        temp = temp->leftPtr;
+    if (key < root->value) {
+        root->left = deleteNode(root->left, key);
     }
-
-    return temp;
-}
-
-// 刪除節點（保留遞迴，但寫法展開）
-BSTNode* removeValue(BSTNode* root, int target) {
-    if (root == NULL) {
-        return NULL;
-    }
-
-    if (target < root->data) {
-        root->leftPtr = removeValue(root->leftPtr, target);
-    }
-    else if (target > root->data) {
-        root->rightPtr = removeValue(root->rightPtr, target);
+    else if (key > root->value) {
+        root->right = deleteNode(root->right, key);
     }
     else {
         // 找到要刪除的節點
 
         // case 1: 沒左子樹
-        if (root->leftPtr == NULL) {
-            BSTNode* temp = root->rightPtr;
+        if (root->left == NULL) {
+            Node* temp = root->right;
+            delete root; // 釋放記憶體
             return temp;
         }
 
         // case 2: 沒右子樹
-        if (root->rightPtr == NULL) {
-            BSTNode* temp = root->leftPtr;
+        if (root->right == NULL) {
+            Node* temp = root->left;
+            delete root;
             return temp;
         }
 
         // case 3: 有兩個子樹
-        BSTNode* successor = getMinNode(root->rightPtr);
+        Node* temp = findMin(root->right);
 
-        root->data = successor->data;
+        root->value = temp->value;
 
-        root->rightPtr = removeValue(root->rightPtr, successor->data);
+        root->right = deleteNode(root->right, temp->value);
     }
 
     return root;
 }
 
+// ================= 計算高度 =================
+int getHeight(Node* root) {
+    if (root == NULL) return 0;
+
+    int l = getHeight(root->left);
+    int r = getHeight(root->right);
+
+    return (l > r ? l : r) + 1;
+}
+
+// ================= 主程式 =================
 int main() {
-    int sizes[6] = {100, 500, 1000, 2000, 3000, 10000};
+    Node* root = NULL;
 
-    // 隨機數設定
-    random_device rd;
-    mt19937 rng(rd());
-    uniform_int_distribution<int> dist(1, 1000000);
+    int arr[7] = {50, 30, 70, 20, 40, 60, 80};
 
-    // ===== (a) 高度分析 =====
-    for (int i = 0; i < 6; i++) {
-        int n = sizes[i];
-        BSTNode* root = NULL;
-
-        // 建立 BST
-        for (int j = 0; j < n; j++) {
-            int val = dist(rng);
-            root = insertValue(root, val);
-        }
-
-        int h = calcHeight(root);
-        double ratio = (double)h / log2(n);
-
-        cout << "[Analysis] n=" << n
-             << " height=" << h
-             << " ratio=" << ratio << endl;
-    }
-
-    // ===== (b) 刪除測試 =====
-    BSTNode* root = NULL;
-    int testData[7] = {50, 30, 70, 20, 40, 60, 80};
-
+    // 建立 BST
     for (int i = 0; i < 7; i++) {
-        root = insertValue(root, testData[i]);
+        root = insertNode(root, arr[i]);
     }
 
-    cout << "\nBefore deletion, height = " << calcHeight(root) << endl;
+    cout << "Before deletion height = " << getHeight(root) << endl;
 
-    // 刪除根節點（50）
-    root = removeValue(root, 50);
+    // 刪除節點 50
+    root = deleteNode(root, 50);
 
-    cout << "After deletion, height = " << calcHeight(root) << endl;
+    cout << "After deletion height = " << getHeight(root) << endl;
 
     return 0;
 }
