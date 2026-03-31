@@ -353,29 +353,43 @@ Node* deleteNode(Node* root, int key) {
 ```
 ### main() 
 ```cpp
+// ================= 主程式 =================
 int main() {
-    int ns[] = {100, 500, 1000, 2000, 3000, 10000};
+    int nList[6] = {100, 500, 1000, 2000, 3000, 10000};
 
+    // 隨機數產生器
     random_device rd;
     mt19937 gen(rd());
-    uniform_int_distribution<> dist(1, 1000000);
+    uniform_int_distribution<int> dist(1, 1000000);
 
-    // ===== (a) 高度分析 =====
     for (int i = 0; i < 6; i++) {
-        int n = ns[i];
+        int n = nList[i];
         Node* root = NULL;
 
+        // 插入 n 個隨機數
         for (int j = 0; j < n; j++) {
-            root = insert(root, dist(gen));
+            root = insertNode(root, dist(gen));
         }
 
-        int h = height(root);
-        double ratio = h / log2(n);
+        int h = getHeight(root);
+
+        // 計算 height / log2(n)
+        double ratio = (double)h / log2(n);
 
         cout << "n=" << n
              << " height=" << h
-             << " ratio=" << ratio << endl;
+             << " ratio=" << ratio;
+
+        // 驗證是否接近常數 (~2)
+        if (ratio > 1.5 && ratio < 3.0) {
+            cout << " (approx constant)";
+        }
+
+        cout << endl;
     }
+
+    return 0;
+}
 
     // ===== (b) 刪除測試 =====
     Node* root = NULL;
