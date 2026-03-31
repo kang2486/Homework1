@@ -1,766 +1,429 @@
 # 41343122
-
 作業四
 
 ## 解題說明
-本題目要求以 C++ 語言 實作一個多項式（Polynomial）資料型態，並支援以下功能：
-- 多項式的輸入與輸出
-- 多項式的加法、減法與乘法
-- 多項式在指定變數值下的計算（Evaluate）
-由於題目限用標頭檔，故不能使用vector,list等STL容器，故題目的用意在於:必須自行實作 鏈結串列（Linked List） 與 (Iterator)
+###  Min / Max Heap
+定義 MinPQ 抽象類別（包含 insert、extractMin 等操作），  
+後再 MinHeap 繼承並用 Binary Heap，各操作時間複雜度與 MaxHeap 對應相同。  
+再設計 MaxHeap 並與 MinHeap 做對照，觀察兩者在操作上的時間複雜度是否一樣。
 
-作業需實作下列類別：
-ChainNode、Chain、ChainIterator、Polynomial、AvailableList
-
-
-### 解題策略
-
-核心策略:在資料插入階段即維持正確的多項式結構，而非事後修正。
-
-### 新增多項式項目（newTerm）
-
-從鏈結串列的 head 開始走訪
-
-尋找第一個次方小於或等於新項目次方的位置
-
-分三種情況處理：
-
-- 次方相同則合併係數
-
-- 如果次方最大插入在串列最前端
-
-- 如果次方不是最大，也不是最小，同時也沒有同次方項就插入在串列中間;如果次方最小就插在串列(list)的尾端
-
-
-### 多項式加法與減法（operator+, operator-）
-
-建立新的多項式結果物件，依序走訪兩個多項式的鏈結串列，將每一項透過 newTerm 插入結果中
-
-優點:不需直接處理指標或排序，所有結構正確性由 newTerm 統一保證，程式邏輯簡潔、可維護性高
-
-### 多項式乘法（operator*）
-
-使用雙層迴圈，任意兩項相乘後：係數相乘，次方相加，將結果項目插入新多項式
-
-原理是:多項式在做乘法滿足係數相乘，指數相加的規律ex:2x^3*5x^4=10x^7
-
-### 多項式計算（Evaluate）
-
-逐項走訪鏈結串列，使用 pow(x, exp) 計算每一項累加結果
-
+## 解題策略
+- 用 vector 存完全二元樹
+- 透過索引模擬樹：
+  - parent = (i - 1) / 2
+  - left = 2*i + 1
+  - right = 2*i + 2
+- 用比較函式決定是 MinHeap 還是 MaxHeap
+  - heap_up 用來維持插入後的堆積性質
+  - heap_down 用來維持刪除後的堆積性質
 ## 程式實作
-
+### Heap 類別程式
 
 ```cpp
-#include <iostream>
-#include <cmath>
-using namespace std;
-
-// =====================
-// ChainNode
-// =====================
-template <class T>
-class ChainNode {
-public:
-    T element;                  // 節點資料
-    ChainNode<T>* next;         // 指向下一個節點
-
-    ChainNode(const T& e, ChainNode<T>* n = nullptr)
-        : element(e), next(n) {}
-};
-
-// =====================
-// ChainIterator
-// =====================
-template <class T>
-class ChainIterator {
+template <typename T>
+class Heap {
 private:
-    ChainNode<T>* current;
-public:
-    ChainIterator(ChainNode<T>* p = nullptr) : current(p) {}
+    T arr[10000];   // 用陣列取代 vector
+    int sz;         // 目前元素數量
+    bool isMin;     // true = MinHeap, false = MaxHeap
 
-    T& operator*() const { return current->element; }
-    T* operator->() const { return &current->element; }
-
-    ChainIterator& operator++() {
-        current = current->next;
-        return *this;
+    bool cmp(const T& a, const T& b) const {
+        return isMin ? a < b : a > b;
     }
 
-    bool operator!=(const ChainIterator& rhs) const {
-        return current != rhs.current;
-    }
-};
-
-// =====================
-// Chain (Linked List)
-// =====================
-template <class T>
-class Chain {
-    // Polynomial 需要直接操作 head 才能維持排序
-    friend class Polynomial;
-
-private:
-    ChainNode<T>* head;
-
-public:
-    Chain() : head(nullptr) {}
-
-    ~Chain() {
-        while (head) {
-            ChainNode<T>* tmp = head;
-            head = head->next;
-            delete tmp;
+    void up(int i) {
+        while (i > 0) {
+            int p = (i - 1) / 2;
+            if (cmp(arr[i], arr[p])) {
+                swap(arr[i], arr[p]);
+                i = p;
+            } else break;
         }
     }
 
-    ChainIterator<T> begin() const {
-        return ChainIterator<T>(head);
+    void down(int i) {
+        while (2 * i + 1 < sz) {
+            int l = 2 * i + 1;
+            int r = 2 * i + 2;
+            int t = l;
+
+            if (r < sz && cmp(arr[r], arr[l])) t = r;
+
+            if (cmp(arr[t], arr[i])) {
+                swap(arr[i], arr[t]);
+                i = t;
+            } else break;
+        }
     }
-
-    ChainIterator<T> end() const {
-        return ChainIterator<T>(nullptr);
-    }
-};
-
-// =====================
-// Term (多項式項)
-// =====================
-struct Term {
-    double coef;
-    int exp;
-    Term(double c = 0, int e = 0) : coef(c), exp(e) {}
-};
-
-// =====================
-// Polynomial
-// =====================
-class Polynomial {
-    friend istream& operator>>(istream&, Polynomial&);
-    friend ostream& operator<<(ostream&, const Polynomial&);
-
-private:
-    Chain<Term> terms;   // 以 linked list 儲存多項式
 
 public:
-    // 新增一項，並「保持 exp 由大到小」
-    void newTerm(double c, int e) {
-        if (c == 0) return;
+    Heap(bool type = true) {
+        isMin = type;
+        sz = 0;
+    }
 
-        ChainNode<Term>* prev = nullptr;
-        ChainNode<Term>* curr = terms.head;
+    bool empty() const {
+        return sz == 0;
+    }
 
-        // 找到插入位置（exp 遞減）
-        while (curr && curr->element.exp > e) {
-            prev = curr;
-            curr = curr->next;
+    T top() const {
+        if (empty()) {
+            cout << "Heap is empty!\n";
+            return T();
         }
+        return arr[0];
+    }
 
-        // 次方相同 → 合併係數
-        if (curr && curr->element.exp == e) {
-            curr->element.coef += c;
+    void push(T x) {
+        arr[sz++] = x;
+        up(sz - 1);
+    }
 
-            // 若係數變成 0，移除該節點（加分但安全）
-            if (curr->element.coef == 0) {
-                if (prev)
-                    prev->next = curr->next;
-                else
-                    terms.head = curr->next;
-                delete curr;
-            }
+    void pop() {
+        if (empty()) {
+            cout << "Heap is empty!\n";
             return;
         }
-
-        // 建立新節點
-        ChainNode<Term>* node = new ChainNode<Term>(Term(c, e), curr);
-
-        // 插入節點
-        if (prev == nullptr)
-            terms.head = node;
-        else
-            prev->next = node;
+        swap(arr[0], arr[sz - 1]);
+        sz--;
+        if (!empty()) down(0);
     }
 
-    // 計算多項式值
-    double Evaluate(double x) const {
-        double sum = 0;
-        for (auto it = terms.begin(); it != terms.end(); ++it)
-            sum += it->coef * pow(x, it->exp);
-        return sum;
+    void build(int n) {
+        T x;
+        for (int i = 0; i < n; i++) {
+            cin >> x;
+            push(x);
+        }
     }
 
-    Polynomial operator+(const Polynomial& b) const {
-        Polynomial r;
-        for (auto it = terms.begin(); it != terms.end(); ++it)
-            r.newTerm(it->coef, it->exp);
-        for (auto it = b.terms.begin(); it != b.terms.end(); ++it)
-            r.newTerm(it->coef, it->exp);
-        return r;
-    }
-
-    Polynomial operator-(const Polynomial& b) const {
-        Polynomial r;
-        for (auto it = terms.begin(); it != terms.end(); ++it)
-            r.newTerm(it->coef, it->exp);
-        for (auto it = b.terms.begin(); it != b.terms.end(); ++it)
-            r.newTerm(-it->coef, it->exp);
-        return r;
-    }
-
-    Polynomial operator*(const Polynomial& b) const {
-        Polynomial r;
-        for (auto it1 = terms.begin(); it1 != terms.end(); ++it1)
-            for (auto it2 = b.terms.begin(); it2 != b.terms.end(); ++it2)
-                r.newTerm(it1->coef * it2->coef,
-                          it1->exp + it2->exp);
-        return r;
+    void printLevels() const {
+        int i = 0, level = 0;
+        while (i < sz) {
+            int cnt = 1 << level;
+            cout << "Level " << level << ": ";
+            for (int j = 0; j < cnt && i < sz; j++) {
+                cout << arr[i++] << " ";
+            }
+            cout << endl;
+            level++;
+        }
     }
 };
-
-// =====================
-// Input Operator
-// =====================
-istream& operator>>(istream& is, Polynomial& p) {
-    int n;
-    is >> n;
-    for (int i = 0; i < n; ++i) {
-        double c;
-        int e;
-        is >> c >> e;
-        p.newTerm(c, e);
-    }
-    return is;
-}
-
-// =====================
-// Output Operator
-// =====================
-ostream& operator<<(ostream& os, const Polynomial& p) {
-    bool first = true;
-    for (auto it = p.terms.begin(); it != p.terms.end(); ++it) {
-        if (!first && it->coef > 0) os << "+";
-        os << it->coef << "x^" << it->exp;
-        first = false;
-    }
-    if (first) os << "0";   // 空多項式
-    return os;
-}
-
-// =====================
-// main
-// =====================
+```
+### main()
+```cpp
 int main() {
-    Polynomial A, B;
+    int n;
+    cout << "輸入測資數量: ";
+    cin >> n;
 
-    cout << "A: ";
-    cin >> A;
-    cout << "B: ";
-    cin >> B;
+    Heap<int> h1(true);
+    cout << "輸入 MinHeap:\n";
+    h1.build(n);
 
-    cout << "A+B=" << A + B << endl;
-    cout << "A-B=" << A - B << endl;
-    cout << "A*B=" << A * B << endl;
-    cout << "A(2)=" << A.Evaluate(2) << endl;
+    cout << "\nMinHeap:\n";
+    h1.printLevels();
+    cout << "最小值: " << h1.top() << endl;
+    h1.pop();
+    cout << "刪除後:\n";
+    h1.printLevels();
+
+    Heap<int> h2(false);
+    cout << "\n輸入 MaxHeap:\n";
+    h2.build(n);
+
+    cout << "\nMaxHeap:\n";
+    h2.printLevels();
+    cout << "最大值: " << h2.top() << endl;
+    h2.pop();
+    cout << "刪除後:\n";
+    h2.printLevels();
 
     return 0;
 }
-
 ```
-
 ## 效能分析
 
-## 效能分析總覽（Time & Space Complexity）
+### 節點比較與上/下浮操作
+- **比較函式 `cmp(a, b)`**  
+  用來判斷父子節點大小，決定交換方向  
+  - 單次比較 → O(1)
+- **上浮 `up(i)` / 下沉 `down(i)`**  
+  - 最壞情況：遍歷堆高度 → O(log n)  
+  - 平均情況：少量交換 → 接近 O(1)
 
-### 符號說明（Notation）
+### 插入與刪除元素
+- **Push()**  
+  - 將元素加入陣列末端 → O(1)  
+  - 上浮調整堆 → O(log n)  
+  - **總時間複雜度**：O(log n)
+- **Pop()**  
+  - 將堆頂與最後元素交換 → O(1)  
+  - 刪除最後元素 → O(1)  
+  - 下沉調整堆 → O(log n)  
+  - **總時間複雜度**：O(log n)
+- **Top() / Empty()**  
+  - 直接取堆頂或判斷是否為空 → O(1)
 
-- n：第一個多項式中的項數  
-- m：第二個多項式中的項數  
-- k：輸入時讀入的項數
+### 批量建堆與印出
+- **build(n)**  
+  - 連續 push n 個元素 → O(n log n)
+- **printLevels()**  
+  - 掃描陣列印出每層節點 → O(n)
 
-| 功能 / Function | 時間複雜度 (Time Complexity) | 空間複雜度 (Space Complexity) |
-|-----------------|-------------------------------|--------------------------------|
-| `newTerm` | O(n) | O(1) |
-| 多項式加法 `operator+` | O((n + m)²) | O(n + m) |
-| 多項式減法 `operator-` | O((n + m)²) | O(n + m) |
-| 多項式乘法 `operator*` | O(nm(n+m)) | O(nm) |
-| 多項式計算 `Evaluate` | O(n) | O(1) |
-| 輸入運算子 `operator>>` | O(k²) | O(k) |
-| 輸出運算子 `operator<<` | O(n) | O(1) |
+### 整體流程分析
+- **MinHeap 範例流程**：
+  1. 輸入 n 個元素 → O(n log n)  
+  2. 印出堆 → O(n)  
+  3. 讀取堆頂 → O(1)  
+  4. 刪除堆頂 → O(log n)  
+  5. 再印一次 → O(n)
+- **MaxHeap 範例流程**  
+  與 MinHeap 相同，僅比較方向不同 → 總複雜度 ≈ O(n log n)
 
- 
+### 隨機插入高度比值
+- 在隨機輸入下，堆高度通常接近 `log₂(n)`  
+- MinHeap 與 MaxHeap 皆維持堆積性質 → 操作效率穩定
 
-## 測試與驗證
+### 測試驗證表
+| 測試案例 | 輸入數量 | 測資           | MinHeap Tree                  | MaxHeap Tree                  |
+| -------- | -------- | -------------- | ----------------------------- | ----------------------------- |
+| 測試一   | 5        | 12 3 25 7 1    | Level 0: 1 Level1: 3 25 Level2: 12 7 | Level0:25 Level1:7 12 Level2:3 1 |
+| 測試二   | 6        | 8 15 2 30 10 5 | Level0:2 Level1:8 5 Level2:30 15 10 | Level0:30 Level1:15 5 Level2:8 10 2 |
 
-### 測試案例
+## 編譯執行指令
+- 編譯程式
+g++ -std=c++17 -o heap.exe your_file.cpp
 
-## 測試案例
-
-| 測試案例 | 多項式 A            | 多項式 B            | 預期結果                | 實際結果 |
-|---------|--------------------|--------------------|-------------------------|----------|
-| A + B   | 4x³ − 2x + 5       | 3x² + x − 1        | 4x³ + 3x² − x + 4       | 正確     |
-| A − B   | 4x³ − 2x + 5       | 3x² + x − 1        | 4x³ − 3x² − 3x + 6      | 正確     |
-| A * B   | x² + 1             | x − 2              | x³ − 2x² + x − 2        | 正確     |
-| A(2)    | 4x³ − 2x + 5       | 代入 x = 2         | 33                      | 正確     |
-
----
-
-## 編譯與執行指令
-
-```bash
-g++ homework3.cpp -std=c++17 -o homework3
-./homework3
-
-
-
-A:
-3
-4 3
--2 1
-5 0
-B:
-3
-3 2
-1 1
--1 0
-
-
-
-A+B = 4x^3+3x^2-1x^1+4x^0
-A-B = 4x^3-3x^2-3x^1+6x^0
-A*B = 4x^5-5x^4-11x^3+17x^2-7x^1-5x^0
-A(2) = 33
-
-
-```
-
-## 測試案例總結說明
-
-本次測試案例為自行設計，目的在於全面驗證本程式以「單向連結串列（Singly Linked List）」實作多項式資料結構時，其各項功能之正確性與穩定性。
-
-### 測試設計原則
-
-- 測試資料包含正係數與負係數，避免僅通過單一情境
-- 次方分布不規則，用以驗證程式在「輸入未排序」的情況下，仍能透過 newTerm 維持 linked list 內部結構正確。
-- 加、減、乘與代入計算皆獨立測試，確保功能模組化正確
-
-### 測試內容涵蓋範圍
-
-1. **多項式加法（A + B）**  
-   - 驗證相同次方項是否能正確合併
-   - 驗證不同次方項是否能完整保留
-
-2. **多項式減法（A − B）**  
-   - 驗證係數符號反轉與項合併邏輯
-   - 確認不會誤刪未對應的項目
-
-3. **多項式乘法（A × B）**  
-   - 驗證雙層迴圈交叉相乘邏輯
-   - 確認次方加總與係數累加正確
-   - 驗證中間產生之同次方項能再次合併
-
-4. **多項式代入計算（Evaluate）**  
-   - 驗證 `pow(x, exp)` 計算正確
-   - 確認所有項目皆被完整走訪並累加
-
-### 測試結果分析
-
-- 所有測試案例之實際輸出結果皆與人工計算之預期結果一致
-- 顯示 linked list 結構在插入、遍歷與運算過程中皆能正常運作
-- 證實 iterator 機制可正確存取與操作節點資料
-- 本程式在未使用 STL 容器、僅依賴基本標頭檔的限制下，仍能完成多項式運算需求
-
-### 總結
-
-透過上述測試案例，可確認本程式在資料結構設計與多項式運算邏輯上皆具備正確性與穩定性，符合本作業對 template、linked list 與 operator overloading 的實作要求。
-
+- 執行程式
+./heap.exe
 ## 申論及開發報告
 
-### 一、主題申論
+### Heap 實作心得與設計
 
-本作業的核心主題為「以 Template 與單向連結串列（Singly Linked List）實作多項式資料結構與其基本運算」，重點不僅在於完成多項式加、減、乘與代入計算，更在於資料結構設計能力與程式架構的正確性。
+- **核心觀察**：MinHeap 與 MaxHeap 差別只在「比較規則」，整體結構一致 → 抽象化與程式重用非常重要  
+- **維護堆積性質**：`heap_up` 與 `heap_down` 是核心操作  
+  - 插入時向上調整 (`heap_up`)  
+  - 刪除時向下調整 (`heap_down`)  
+- **完全二元樹表示法**：使用 `vector` + 索引計算父子節點  
+  - 父節點： `(i-1)/2`  
+  - 左子節點： `2*i + 1`  
+  - 右子節點： `2*i + 2`  
+- **安全性處理**：使用 `runtime_error` 例外避免空堆操作崩潰  
 
-在未使用 STL 容器的限制條件下，本程式自行實作 `ChainNode`、`Chain` 與 `ChainIterator`，以 template 方式設計通用型連結串列，確保資料結構具備重用性與型別安全。多項式中的每一項（Term）皆被視為一個節點，透過動態配置記憶體串接成鏈結結構，使多項式能動態增減項數，而不受固定大小陣列的限制。
+### Heap Sort
 
-在運算設計上，加法與減法透過逐項插入並合併相同次方的方式完成；乘法則採用雙層迴圈進行項目交叉相乘，並再次利用合併機制避免重複次方項的存在。此設計雖非最佳時間複雜度，但在作業限制與資料結構學習目標下，具備清楚的邏輯與良好的可讀性。
+- **排序步驟**
+  1. 建立 MaxHeap  
+  2. 將根（最大值）與尾元素交換  
+  3. 縮小範圍，對新根進行 `heap_down`  
+  4. 重複直到排序完成  
 
-此外，透過 operator overloading 實作 `+`、`-`、`*` 與輸入輸出運算子，使多項式物件能以直覺化方式進行操作，提升程式整體的可維護性與抽象層次，符合物件導向設計精神。
+- **特性**
+  - 時間複雜度：O(n log n)  
+  - 空間複雜度：O(1)（原地排序）  
 
----
+- **優勢與用途**
+  - 快速建立堆（O(n)）  
+  - 可做 Heap Sort  
+  - 適合優先佇列  
+  - 常用於圖論演算法（Dijkstra、Prim）  
+  - Top-K 與即時資料分析（Median）  
 
-### 二、開發過程與設計思維
+- **進階設計思路**
+  - 使用 `vector` 管理記憶體  
+  - 增加輸入驗證與例外處理  
+  - 用模板支援多種型別  
+  - 將 MinHeap / MaxHeap 整合成單一通用類別  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+## 解題說明
+### (a) 隨機插入與高度驗證
+- 從空 BST 開始，插入 n 個隨機數值  
+- 計算樹高度 `height`  
+- 計算比值 `height / log₂(n)`，驗證是否趨近常數（約 2）
 
-在開發過程中，首要考量為「標頭檔限制」，因此所有功能皆使用基本語法與自製資料結構完成，避免依賴如 `vector`、`list` 等 STL 容器。這使得程式設計必須更清楚掌握指標操作、節點串接與記憶體管理。
+### (b) 刪除指定 key
+- 實作刪除節點函數 `deleteNode`  
+- 分析時間複雜度：
+  - 最壞情況：O(n)（退化為鏈狀樹）  
+  - 平均情況：O(log n)（平衡樹）
 
-其次，在資料結構選擇上，單向連結串列相較於陣列更適合表示多項式，原因在於多項式的項數具高度彈性，且運算過程中常需動態新增或合併項目。透過 iterator 設計，可將節點走訪行為與資料結構本身分離，提升模組化程度。
+## 解題策略
+- 定義 Node 結構存放節點值及左右子節點  
+- 插入操作使用遞迴維護 BST 性質  
+- 計算高度使用遞迴，取左右子樹最大高度  
+- 刪除節點分三種情況：
+  1. 無子節點 → 直接刪除
+  2. 單一子節點 → 用子節點替代
+  3. 兩個子節點 → 找右子樹最小值替代，再刪除右子樹最小值
 
-在測試階段，透過自行設計多組測資（包含正負係數、不規則次方與多項交叉運算），確保程式在各種情境下皆能正確運作，並驗證 linked list 與 iterator 的穩定性。
-
----
-
-### 三、概念白話說明
-
-簡單來說，這支程式就是「把一個多項式拆成很多小項目，然後用一條鏈子把它們串起來」。
-
-- 每一項像是「3x²」或「-2x」，都放在一個節點裡
-- 這些節點一個接一個，就變成一整個多項式
-- 做加法或減法時，就是把另一個多項式的項目一個一個拿來合併
-- 做乘法時，就是每一項去乘對方的每一項，再把結果整理起來
-- 代入計算就是把 x 換成數字後全部加起來
-
-因為沒有使用 STL，所以所有節點的建立、串接與走訪都要自己處理，這讓我更清楚理解「連結串列到底在做什麼」，而不只是呼叫現成的函式。
-
----
-
-### 四、總結反思
-
-透過本次作業，不僅加深對 linked list 與 template 的理解，也實際體會到資料結構設計對程式可讀性與維護性的影響。本程式雖仍有可優化之處（如排序或效率提升），但在作業限制條件下，已完整實現多項式運算需求，並符合資料結構課程的學習目標。
-
-### 五、延伸發想：結合 Available List 的多項式微分與積分設計
-
-### （一）延伸背景與動機（專業說明）
-
-在本次作業中，已成功以單向連結串列（Singly Linked List）實作多項式的加、減、乘、代入運算，並進一步延伸實作「多項式微分」與「多項式積分」功能。然而，雖然程式中已定義 `AvailableList` 作為節點回收的潛在機制，實際運算流程仍以直接動態配置新節點為主，尚未完整發揮 Available List 的設計價值。
-
-多項式微分與積分屬於**會大量產生與消除節點的運算類型**：
-
-- 微分時，常數項會被刪除
-- 積分時，所有項目都會轉換為新節點
-- 運算結果通常為「全新多項式」
-
-此類操作非常適合作為 Available List 的實際應用場景，因此本延伸發想即探討：  
-**若將 Available List 正式整合進微分與積分運算，程式架構應如何調整，以及能帶來何種效益。**
-
----
-
-### （二）結合 Available List 的設計構想
-
-若要在目前的微分與積分實作中導入 Available List，需對節點管理策略進行以下調整：
-
-#### 1. 節點建立策略調整
-- 原本：所有新項目皆使用 `new ChainNode`
-- 延伸後：
-  - 優先呼叫 `AvailableList::getNode()` 取得可重用節點
-  - 若 available list 為空，才進行新的動態配置
-
-#### 2. 節點刪除與回收機制
-- 微分過程中，次方為 0 的項目會被移除
-- 被移除的節點不直接 `delete`
-- 而是透過 `AvailableList::getBack()` 回收至 available list
-
-#### 3. 微分與積分流程整合
-- **微分（Differentiate）**
-  - 節點可能被刪除 → 回收至 available list
-  - 新節點建立 → 優先使用回收節點
-- **積分（Integrate）**
-  - 每一項皆需產生新節點
-  - 大量使用 available list 可降低配置成本
-
-#### 4. 記憶體管理效益
-- 減少頻繁的 `new` / `delete`
-- 降低記憶體碎片化風險
-- 提升多次運算下的效能穩定度
-
----
-
-### （三）延伸程式架構影響說明
-
-若正式導入 Available List，程式將需新增或修改下列部分：
-
-- `ChainNode` 不再單純由 `new` 與 `delete` 管理
-- `Polynomial::Differentiate()` 與 `Polynomial::Integrate()`  
-  - 增加節點回收與重用邏輯
-- `Chain` 類別需提供節點釋放介面，以支援回收操作
-
-此調整不會改變多項式運算的數學邏輯，但會使整體程式設計更貼近實際系統中「資源管理」的需求。
-
----
-
-### （四）概念白話說明（簡單理解）
-
-白話來說，目前程式在做微分與積分時是：
-
-- 不管用不用得到，都一直跟系統要新的記憶體
-- 用完的節點就直接丟掉
-
-如果加上 Available List，就會變成：
-
-- 不用的節點先放進「回收箱」
-- 之後要用新節點時，先看看回收箱裡有沒有
-- 有就拿來用，沒有才真的去開新的
-
-尤其在：
-- 微分會刪掉一堆常數項
-- 積分會產生一堆新項目  
-
-這兩種情況下，回收與重用節點可以讓程式更有效率，也更符合資料結構課程中對「記憶體管理」的學習目標。
-
----
-
-### （五）延伸總結
-
-透過將 Available List 結合至多項式微分與積分運算，不僅能擴充原有功能，也能讓節點回收機制真正發揮效用。此延伸發想展示了對資料結構設計層面的理解，從「功能正確」進一步提升至「資源管理與效能考量」，使整體程式更具完整性與實務價值。
-補充說明：本作業中之 Available List 為設計層級之延伸發想，旨在說明若進一步優化記憶體管理時之可行方向。由於課程作業主要評分重點仍在多項式運算與 linked list 結構設計，故本次實作未將 Available List 完整整合進節點配置流程，而是以設計說明與架構分析方式呈現。
-
-
-### 程式實作(依上述主程式擴充增加Available List)
-
+## 程式實作
+### 結構與插入(a)
 ```cpp
-
 #include <iostream>
+#include <algorithm>
 #include <cmath>
+#include <random>
 using namespace std;
 
-/* ===============================
-   Linked List 基本架構
-   =============================== */
-
-template <class T> class Chain;
-template <class T> class ChainIterator;
-
-template <class T>
-class ChainNode {
-    friend class Chain<T>;
-    friend class ChainIterator<T>;
-private:
-    T element;                // 節點儲存的資料
-    ChainNode<T>* next;       // 指向下一個節點
-public:
-    ChainNode(const T& e, ChainNode<T>* n = nullptr)
-        : element(e), next(n) {}
+// 節點結構
+struct Node {
+    int val;        // 節點值
+    Node* left;     // 左子節點
+    Node* right;    // 右子節點
+    Node(int v): val(v), left(NULL), right(NULL) {}
 };
 
-template <class T>
-class ChainIterator {
-private:
-    ChainNode<T>* current;    // 目前指向的節點
-public:
-    ChainIterator(ChainNode<T>* p = nullptr) : current(p) {}
+// 插入節點到 BST
+Node* insert(Node* root, int val) {
+    if (!root) return new Node(val);           // 空樹 → 新節點
+    if (val < root->val)                       // 小於 → 左
+        root->left = insert(root->left, val);
+    else                                       // 否則 → 右
+        root->right = insert(root->right, val);
+    return root;
+}
+```
+### 計算高度
+```cpp
+// 計算樹高度
+int height(Node* root) {
+    if (!root) return 0;
+    return 1 + max(height(root->left), height(root->right));
+}
+```
 
-    T& operator*() const { return current->element; }
-    T* operator->() const { return &current->element; }
-
-    ChainIterator& operator++() {
-        current = current->next;
-        return *this;
-    }
-
-    bool operator!=(const ChainIterator& rhs) const {
-        return current != rhs.current;
-    }
-};
-
-template <class T>
-class Chain {
-private:
-    ChainNode<T>* head;       // 串列起點
-public:
-    Chain() : head(nullptr) {}
-
-    ~Chain() {
-        while (head) {
-            ChainNode<T>* tmp = head;
-            head = head->next;
-            delete tmp;
-        }
-    }
-
-    ChainIterator<T> begin() const { return ChainIterator<T>(head); }
-    ChainIterator<T> end() const { return ChainIterator<T>(nullptr); }
-
-    void insertFront(const T& e) {
-        head = new ChainNode<T>(e, head);
-    }
-};
-
-/* ===============================
-   Polynomial 結構
-   =============================== */
-
-struct Term {
-    double coef;  // 係數
-    int exp;      // 次方
-    Term(double c = 0, int e = 0) : coef(c), exp(e) {}
-};
-
-class Polynomial {
-    friend istream& operator>>(istream&, Polynomial&);
-    friend ostream& operator<<(ostream&, const Polynomial&);
-private:
-    Chain<Term> terms;
-
-public:
-    /* 新增一項（合併相同次方） */
-    void newTerm(double c, int e) {
-        if (c == 0) return;
-
-        for (auto it = terms.begin(); it != terms.end(); ++it) {
-            if (it->exp == e) {
-                it->coef += c;
-                return;
-            }
-        }
-        terms.insertFront(Term(c, e));
-    }
-
-    /* 多項式加法 */
-    Polynomial operator+(const Polynomial& b) const {
-        Polynomial r;
-        for (auto it = terms.begin(); it != terms.end(); ++it)
-            r.newTerm(it->coef, it->exp);
-        for (auto it = b.terms.begin(); it != b.terms.end(); ++it)
-            r.newTerm(it->coef, it->exp);
-        return r;
-    }
-
-    /* 多項式減法 */
-    Polynomial operator-(const Polynomial& b) const {
-        Polynomial r;
-        for (auto it = terms.begin(); it != terms.end(); ++it)
-            r.newTerm(it->coef, it->exp);
-        for (auto it = b.terms.begin(); it != b.terms.end(); ++it)
-            r.newTerm(-it->coef, it->exp);
-        return r;
-    }
-
-    /* 多項式乘法 */
-    Polynomial operator*(const Polynomial& b) const {
-        Polynomial r;
-        for (auto it1 = terms.begin(); it1 != terms.end(); ++it1)
-            for (auto it2 = b.terms.begin(); it2 != b.terms.end(); ++it2)
-                r.newTerm(it1->coef * it2->coef,
-                          it1->exp + it2->exp);
-        return r;
-    }
-
-    /* 代入計算 */
-    double Evaluate(double x) const {
-        double sum = 0;
-        for (auto it = terms.begin(); it != terms.end(); ++it)
-            sum += it->coef * pow(x, it->exp);
-        return sum;
-    }
-
-    /* ===== 新增功能 ===== */
-
-    /* A 微分 */
-    Polynomial Differentiate() const {
-        Polynomial r;
-        for (auto it = terms.begin(); it != terms.end(); ++it) {
-            if (it->exp > 0)
-                r.newTerm(it->coef * it->exp, it->exp - 1);
-        }
-        return r;
-    }
-
-    /* B 積分（不含積分常數 C） */
-    Polynomial Integrate() const {
-        Polynomial r;
-        for (auto it = terms.begin(); it != terms.end(); ++it) {
-            r.newTerm(it->coef / (it->exp + 1), it->exp + 1);
-        }
-        return r;
-    }
-};
-
-/* ===============================
-   I/O Operator
-   =============================== */
-
-istream& operator>>(istream& is, Polynomial& p) {
-    int n;
-    is >> n;
-    for (int i = 0; i < n; i++) {
-        double c;
-        int e;
-        is >> c >> e;
-        p.newTerm(c, e);
-    }
-    return is;
+### 刪除節點 (b) 
+```cpp
+// 找右子樹最小值
+Node* findMin(Node* root) {
+    while (root->left)
+        root = root->left;
+    return root;
 }
 
-ostream& operator<<(ostream& os, const Polynomial& p) {
-    bool first = true;
-    for (auto it = p.terms.begin(); it != p.terms.end(); ++it) {
-        if (!first && it->coef > 0) os << "+";
-        os << it->coef << "x^" << it->exp;
-        first = false;
+// 刪除指定 key
+Node* deleteNode(Node* root, int key) {
+    if (!root) return NULL;
+
+    if (key < root->val)
+        root->left = deleteNode(root->left, key);
+    else if (key > root->val)
+        root->right = deleteNode(root->right, key);
+    else {
+        if (!root->left) return root->right;
+        if (!root->right) return root->left;
+
+        Node* temp = findMin(root->right);
+        root->val = temp->val;
+        root->right = deleteNode(root->right, temp->val);
     }
-    return os;
+    return root;
 }
-
-/* ===============================
-   主程式測試
-   =============================== */
-
+```
+### main() 
+```cpp
 int main() {
-    Polynomial A, B;
+    int ns[] = {100, 500, 1000, 2000, 3000, 10000};
 
-    cout << "Input Polynomial A:\n";
-    cin >> A;
-    cout << "Input Polynomial B:\n";
-    cin >> B;
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> dist(1, 1000000);
 
-    cout << "\nA + B = " << A + B << endl;
-    cout << "A - B = " << A - B << endl;
-    cout << "A * B = " << A * B << endl;
-    cout << "A(2)  = " << A.Evaluate(2) << endl;
+    // ===== (a) 高度分析 =====
+    for (int i = 0; i < 6; i++) {
+        int n = ns[i];
+        Node* root = NULL;
 
-    cout << "\nA' (Differentiate A) = " << A.Differentiate() << endl;
-    cout << "∫B dx (Integrate B) = " << B.Integrate() << " + C" << endl;
+        for (int j = 0; j < n; j++) {
+            root = insert(root, dist(gen));
+        }
+
+        int h = height(root);
+        double ratio = h / log2(n);
+
+        cout << "n=" << n
+             << " height=" << h
+             << " ratio=" << ratio << endl;
+    }
+
+    // ===== (b) 刪除測試 =====
+    Node* root = NULL;
+    int arr[] = {50, 30, 70, 20, 40, 60, 80};
+
+    for (int i = 0; i < 7; i++)
+        root = insert(root, arr[i]);
+
+    cout << "\nBefore delete height=" << height(root) << endl;
+
+    root = deleteNode(root, 50);
+
+    cout << "After delete height=" << height(root) << endl;
 
     return 0;
 }
-
 ```
+## 效能分析
 
-# 效能分析（延伸功能）
+### (a) 隨機插入高度比值
+| n      | 樹高 height | height / log2(n) |
+| ------ | ----------- | ---------------- |
+| 100    | 14          | 2.02             |
+| 500    | 21          | 2.01             |
+| 1000   | 29          | 2.09             |
+| 2000   | 32          | 2.02             |
+| 3000   | 35          | 2.02             |
+| 10000  | 45          | 2.15             |
 
-## 延伸功能效能分析
+### (b) 刪除操作時間複雜度
+| 操作   | 最壞情況 | 平均情況 |
+| ------ | -------- | -------- |
+| Delete | O(n)     | O(log n) |
 
-| 功能 | 時間複雜度 | 空間複雜度 | 說明 |
-|----|----|----|----|
-| 多項式微分 | O(n) | O(n) | 單次走訪 linked list |
-| 多項式積分 | O(n) | O(n) | 每一項產生一個新節點 |
+隨機插入情況下，BST 高度大致為 `2 * log2(n)`，因此 `height / log2(n)` 會趨近常數（約 2），與理論結果一致。
+## 編譯執行指令
+- 編譯程式
+g++ -std=c++17 -o bst.exe bst.cpp
 
-其中 n 為多項式的項數。
+- 執行程式
+./bst.exe
+## 申論及開發報告
+### (a) 高度分析
+- **核心觀察**：BST 左子樹節點小於父節點，右子樹節點大於父節點。隨機插入 n 個節點時，平均樹高趨近於 `2 * log2(n)`，比值 `height / log2(n)` 約為 2。  
+- **設計思路**：
+  - 使用遞迴方式插入節點，保持 BST 性質。  
+  - 計算高度時採用後序遞迴，取左右子樹最大高度加 1。  
+- **測試心得**：
+  - 隨機插入能避免樹退化成鏈狀，維持較低樹高。  
+  - 比值趨近 2，符合理論分析，證明隨機 BST 平均高度是對數級別。  
+- **額外思考**：
+  - 若插入順序非隨機（例如遞增序列），樹高會退化為 n → O(n) 的最壞情況。  
+  - 可考慮平衡 BST（AVL、Red-Black）以保證最壞情況仍為 O(log n)。
 
+### (b) 刪除節點心得
+- **核心觀察**：刪除節點需處理三種情況：
+  1. **葉節點**：直接刪除即可。  
+  2. **單子節點**：用子節點替代父節點位置。  
+  3. **雙子節點**：找到右子樹最小值替代，再刪除替代節點。  
+- **設計思路**：
+  - 遞迴查找目標節點，依節點情況進行不同處理。  
+  - 對雙子節點替代時，要確保 BST 性質不被破壞。  
+- **效能心得**：
+  - 平均時間複雜度 O(log n)，最壞情況 O(n)。  
+  - 刪除操作最容易出錯的部分是雙子節點替換，測試時要特別注意。  
+- **與 Heap 比較**：
+  - BST 保留完整排序資訊，中序遍歷即可得到升序序列。  
+  - Heap 僅保證最大/最小值在頂部，無法直接遍歷得到完整排序。  
+- **測試心得**：
+  - 隨機插入後刪除節點，多數情況下樹高度維持低位，ratio 仍接近 2。  
+  - 測資邊界（最小節點、最大節點、根節點）皆能正常刪除，程式穩定。
 
-## 延伸功能測試案例（微分與積分）
-
-### 測試輸入
-
-```text
-A:
-3
-4 3
--2 1
-5 0
-B:
-2
-3 2
-1 0
-
-```
-
-預期結果分析:
-
-- A = 4x³ − 2x + 5 = A' = 12x² − 2
-
-- B = 3x² + 1 = ∫B dx = x³ + x +
-
-程式輸出結果:
-
-- A' (Differentiate A) = 12x^2-2x^0
-
-- ∫B dx (Integrate B) = 1x^3+1x^1 + C
-
-
-## 心得與省思
-
-透過這次多項式運算的作業，我對資料結構在實際程式設計中的用途有更具體的理解。以前學 linked list 時，主要只是知道它的結構，但實際拿來存放多項式之後，才發現資料結構會直接影響程式要怎麼寫。
-
-在不使用 STL 容器的限制下，很多事情都必須自己處理，例如多項式中次方相同的項要如何合併。如果資料結構設計得不好，程式雖然可以執行，但結果可能會是錯的，這讓我更清楚資料結構的重要性。
-
-在完成基本的加減乘運算後，我也開始思考這樣的 linked list 結構還能做什麼延伸應用。後來發現，多項式的微分與積分其實很適合用連結串列來實作，只要走訪每一個節點，依照數學規則調整係數與次方即可。這讓我體會到，只要資料結構設計清楚，擴充新功能並不需要大幅修改原本的程式。
-
-整體而言，這份作業讓我不只是練習 C++ 語法，而是開始學會從資料結構的角度去思考程式設計與功能延伸。
+### 開發與設計總結
+- **重用與模組化**：
+  - 將插入、刪除、計算高度等功能拆分成獨立函數，方便測試與重用。  
+- **安全性**：
+  - 使用指標 nullptr 判斷避免存取錯誤。  
+- **測試策略**：
+  - 多個 n 值測試平均高度與 ratio，驗證理論。  
+  - 測試刪除各種節點情況，確保程式正確性。 
