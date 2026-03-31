@@ -287,10 +287,13 @@ Node* insertNode(Node* root, int v) {
 ```
 ### 計算高度
 ```cpp
-// 計算樹高度
-int height(Node* root) {
-    if (!root) return 0;
-    return 1 + max(height(root->left), height(root->right));
+int getHeight(Node* root) {
+    if (root == NULL) return 0;
+
+    int leftH = getHeight(root->left);
+    int rightH = getHeight(root->right);
+
+    return (leftH > rightH ? leftH : rightH) + 1;
 }
 ```
 
