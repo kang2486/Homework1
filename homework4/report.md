@@ -19,96 +19,94 @@ Heap 結構：
 ### Heap 類別程式
 
 ```cpp
-template <typename T>
-class Heap {
+// ================= MinHeap（繼承 MinPQ） =================
+template <class T>
+class MinHeap : public MinPQ<T> {
 private:
-    T arr[10000];   // 用陣列取代 vector
-    int sz;         // 目前元素數量
-    bool isMin;     // true = MinHeap, false = MaxHeap
+    T arr[10000];  // 儲存 Heap 的陣列
+    int size;      // 目前元素數量
 
-    bool cmp(const T& a, const T& b) const {
-        return isMin ? a < b : a > b;
-    }
+    // 向上調整（維持 MinHeap 性質）
+    void heapifyUp(int index) {
+        while (index > 0) {
+            int parent = (index - 1) / 2;
 
-    void up(int i) {
-        while (i > 0) {
-            int p = (i - 1) / 2;
-            if (cmp(arr[i], arr[p])) {
-                swap(arr[i], arr[p]);
-                i = p;
-            } else break;
+            // 若子節點比父節點小，則交換
+            if (arr[index] < arr[parent]) {
+                T temp = arr[index];
+                arr[index] = arr[parent];
+                arr[parent] = temp;
+
+                index = parent; // 繼續往上
+            } else {
+                break;
+            }
         }
     }
 
-    void down(int i) {
-        while (2 * i + 1 < sz) {
-            int l = 2 * i + 1;
-            int r = 2 * i + 2;
-            int t = l;
+    // 向下調整（維持 MinHeap 性質）
+    void heapifyDown(int index) {
+        while (true) {
+            int left = index * 2 + 1;
+            int right = index * 2 + 2;
 
-            if (r < sz && cmp(arr[r], arr[l])) t = r;
+            if (left >= size) break; // 沒有子節點
 
-            if (cmp(arr[t], arr[i])) {
-                swap(arr[i], arr[t]);
-                i = t;
-            } else break;
+            int smallest = left;
+
+            // 比較左右子節點，找較小者
+            if (right < size && arr[right] < arr[left]) {
+                smallest = right;
+            }
+
+            // 若子節點較小則交換
+            if (arr[smallest] < arr[index]) {
+                T temp = arr[index];
+                arr[index] = arr[smallest];
+                arr[smallest] = temp;
+
+                index = smallest; // 繼續往下
+            } else {
+                break;
+            }
         }
     }
 
 public:
-    Heap(bool type = true) {
-        isMin = type;
-        sz = 0;
+    MinHeap() {
+        size = 0;
     }
 
-    bool empty() const {
-        return sz == 0;
+    // 是否為空
+    bool isEmpty() const override {
+        return size == 0;
     }
 
-    T top() const {
-        if (empty()) {
-            cout << "Heap is empty!\n";
-            return T();
-        }
+    // 取得最小值
+    const T& top() const override {
         return arr[0];
     }
 
-    void push(T x) {
-        arr[sz++] = x;
-        up(sz - 1);
+    // 插入元素
+    void push(const T& x) override {
+        arr[size] = x;   // 放到最後
+        size++;
+        heapifyUp(size - 1); // 向上調整
     }
 
-    void pop() {
-        if (empty()) {
-            cout << "Heap is empty!\n";
-            return;
-        }
-        swap(arr[0], arr[sz - 1]);
-        sz--;
-        if (!empty()) down(0);
-    }
+    // 刪除最小值
+    void pop() override {
+        if (size == 0) return;
 
-    void build(int n) {
-        T x;
-        for (int i = 0; i < n; i++) {
-            cin >> x;
-            push(x);
-        }
-    }
+        arr[0] = arr[size - 1]; // 用最後一個補上
+        size--;
 
-    void printLevels() const {
-        int i = 0, level = 0;
-        while (i < sz) {
-            int cnt = 1 << level;
-            cout << "Level " << level << ": ";
-            for (int j = 0; j < cnt && i < sz; j++) {
-                cout << arr[i++] << " ";
-            }
-            cout << endl;
-            level++;
+        if (size > 0) {
+            heapifyDown(0); // 向下調整
         }
     }
 };
+
 ```
 ### main()
 ```cpp
