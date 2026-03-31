@@ -236,27 +236,52 @@ g++ -std=c++17 -o heap.exe your_file.cpp
 ## 程式實作
 ### 結構與插入(a)
 ```cpp
+//41343122
 #include <iostream>
-#include <algorithm>
 #include <cmath>
 #include <random>
 using namespace std;
 
-// 節點結構
-struct Node {
-    int val;        // 節點值
-    Node* left;     // 左子節點
-    Node* right;    // 右子節點
-    Node(int v): val(v), left(NULL), right(NULL) {}
+// ================= BST 節點 =================
+class Node {
+public:
+    int value;
+    Node* left;
+    Node* right;
+
+    Node(int v) {
+        value = v;
+        left = NULL;
+        right = NULL;
+    }
 };
 
-// 插入節點到 BST
-Node* insert(Node* root, int val) {
-    if (!root) return new Node(val);           // 空樹 → 新節點
-    if (val < root->val)                       // 小於 → 左
-        root->left = insert(root->left, val);
-    else                                       // 否則 → 右
-        root->right = insert(root->right, val);
+// ================= 插入（用 while） =================
+Node* insertNode(Node* root, int v) {
+    if (root == NULL) {
+        return new Node(v);
+    }
+
+    Node* cur = root;
+
+    while (true) {
+        if (v < cur->value) {
+            if (cur->left == NULL) {
+                cur->left = new Node(v);
+                break;
+            } else {
+                cur = cur->left;
+            }
+        } else {
+            if (cur->right == NULL) {
+                cur->right = new Node(v);
+                break;
+            } else {
+                cur = cur->right;
+            }
+        }
+    }
+
     return root;
 }
 ```
