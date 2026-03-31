@@ -4,7 +4,7 @@
 ## 解題說明
 ### MinHeap 與抽象類別實作
 - 本題要求定義一個名為 MinPQ 的抽象基底類別（Abstract Class），作為最小優先權佇列的介面。
-- 實作 MinHeap 類別繼承該介面，利用**完全二元樹（Complete Binary Tree）**的性質來維護堆積。
+- 實作 MinHeap 類別繼承該介面，利用完全二元樹（Complete Binary Tree)的性質來維護堆積。
 - 目標：確保 push 與 pop 的時間複雜度皆為 $O(\log n)$，且 top 為 $O(1)$。關鍵性質：父節點的值必須小於或等於其子節點的值。
 
 ## 解題策略
