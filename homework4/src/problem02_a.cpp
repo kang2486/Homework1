@@ -4,42 +4,42 @@
 #include <random>
 using namespace std;
 
-// 二元搜尋樹節點
-class TreeNode {
+// ================= BST 節點 =================
+class Node {
 public:
     int value;
-    TreeNode* leftChild;
-    TreeNode* rightChild;
+    Node* left;
+    Node* right;
 
-    TreeNode(int v) {
+    Node(int v) {
         value = v;
-        leftChild = NULL;
-        rightChild = NULL;
+        left = NULL;
+        right = NULL;
     }
 };
 
-// 將數值插入 BST（用 while 寫法）
-TreeNode* addNode(TreeNode* root, int v) {
+// ================= 插入（用 while） =================
+Node* insertNode(Node* root, int v) {
     if (root == NULL) {
-        return new TreeNode(v);
+        return new Node(v);
     }
 
-    TreeNode* current = root;
+    Node* cur = root;
 
     while (true) {
-        if (v < current->value) {
-            if (current->leftChild == NULL) {
-                current->leftChild = new TreeNode(v);
+        if (v < cur->value) {
+            if (cur->left == NULL) {
+                cur->left = new Node(v);
                 break;
             } else {
-                current = current->leftChild;
+                cur = cur->left;
             }
         } else {
-            if (current->rightChild == NULL) {
-                current->rightChild = new TreeNode(v);
+            if (cur->right == NULL) {
+                cur->right = new Node(v);
                 break;
             } else {
-                current = current->rightChild;
+                cur = cur->right;
             }
         }
     }
@@ -47,52 +47,49 @@ TreeNode* addNode(TreeNode* root, int v) {
     return root;
 }
 
-// 計算樹高（仍使用遞迴，較直觀）
-int getHeight(TreeNode* node) {
-    if (node == NULL) {
-        return 0;
-    }
+// ================= 計算高度 =================
+int getHeight(Node* root) {
+    if (root == NULL) return 0;
 
-    int leftH = getHeight(node->leftChild);
-    int rightH = getHeight(node->rightChild);
+    int leftH = getHeight(root->left);
+    int rightH = getHeight(root->right);
 
-    if (leftH > rightH) {
-        return leftH + 1;
-    } else {
-        return rightH + 1;
-    }
+    return (leftH > rightH ? leftH : rightH) + 1;
 }
 
+// ================= 主程式 =================
 int main() {
-    // 測試不同資料量
-    int testSize[6] = {100, 500, 1000, 2000, 3000, 10000};
+    int nList[6] = {100, 500, 1000, 2000, 3000, 10000};
 
-    // 隨機數產生器設定
+    // 隨機數產生器
     random_device rd;
-    mt19937 engine(rd());
-    uniform_int_distribution<int> randomValue(1, 1000000);
+    mt19937 gen(rd());
+    uniform_int_distribution<int> dist(1, 1000000);
 
     for (int i = 0; i < 6; i++) {
-        int n = testSize[i];
+        int n = nList[i];
+        Node* root = NULL;
 
-        TreeNode* root = NULL;
-
-        // 建立 BST
+        // 插入 n 個隨機數
         for (int j = 0; j < n; j++) {
-            int val = randomValue(engine);
-            root = addNode(root, val);
+            root = insertNode(root, dist(gen));
         }
 
-        // 計算高度
-        int treeHeight = getHeight(root);
+        int h = getHeight(root);
 
-        // 計算與 log2(n) 的比例
-        double ratioValue = (double)treeHeight / log2(n);
+        // 計算 height / log2(n)
+        double ratio = (double)h / log2(n);
 
-        cout << "n = " << n
-             << ", height = " << treeHeight
-             << ", ratio = " << ratioValue
-             << endl;
+        cout << "n=" << n
+             << " height=" << h
+             << " ratio=" << ratio;
+
+        // 驗證是否接近常數 (~2)
+        if (ratio > 1.5 && ratio < 3.0) {
+            cout << " (approx constant)";
+        }
+
+        cout << endl;
     }
 
     return 0;
